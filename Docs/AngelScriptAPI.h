@@ -603,6 +603,8 @@ Array<String> enumNames;
 uint mode;
 String name;
 VariantType type;
+/* readonly */
+Array<String> variantStructureElementNames;
 };
 
 class Audio
@@ -2355,9 +2357,11 @@ int weakRefs;
 class Console
 {
 // Methods:
+void AddAutoComplete(const String&);
 void CopySelectedRows() const;
 bool HasSubscribedToEvent(Object, const String&);
 bool HasSubscribedToEvent(const String&);
+void RemoveAutoComplete(const String&);
 void SendEvent(const String&, VariantMap& = VariantMap ( ));
 void Toggle();
 void UpdateElements();
@@ -14738,6 +14742,7 @@ FILTER_NEAREST,
 FILTER_BILINEAR,
 FILTER_TRILINEAR,
 FILTER_ANISOTROPIC,
+FILTER_NEAREST_ANISOTROPIC,
 FILTER_DEFAULT,
 };
 
@@ -14923,6 +14928,7 @@ uint GetMaxBones();
 String GetMiniDumpDir();
 uint GetNumLogicalCPUs();
 uint GetNumPhysicalCPUs();
+Array<AttributeInfo> GetObjectAttributeInfos(const String&);
 Array<String> GetObjectCategories();
 Array<String> GetObjectsByCategory(const String&);
 String GetParentPath(const String&);
@@ -14939,6 +14945,8 @@ uint GetRGFloat32Format();
 uint GetRandomSeed();
 uint GetReadableDepthFormat();
 String GetTextureUnitName(TextureUnit);
+VariantType GetVariantTypeFromName(const String&);
+String GetVariantTypeName(VariantType);
 bool HasSubscribedToEvent(Object, const String&);
 bool HasSubscribedToEvent(const String&);
 float InverseLerp(float, float, float);
