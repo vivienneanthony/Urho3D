@@ -29,6 +29,7 @@
 #include <Urho3D/Graphics/Octree.h>
 #include <Urho3D/Graphics/Renderer.h>
 #include <Urho3D/Graphics/StaticModel.h>
+#include <Urho3D/Graphics/Terrain.h>
 #include <Urho3D/Input/Input.h>
 #include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/Scene/Scene.h>
@@ -49,11 +50,18 @@ StaticScene::StaticScene(Context* context) :
 
 void StaticScene::Start()
 {
+    context_->RegisterFactory<Terrain>();
+
+
+
     // Execute base class startup
     Sample::Start();
 
+
     // Create the scene content
     CreateScene();
+
+
 
     // Create the UI content
     CreateInstructions();
@@ -84,10 +92,8 @@ void StaticScene::CreateScene()
     // plane mesh with a "stone" material. Note that naming the scene nodes is optional. Scale the scene node larger
     // (100 x 100 world units)
     Node* planeNode = scene_->CreateChild("Plane");
-    planeNode->SetScale(Vector3(100.0f, 1.0f, 100.0f));
-    StaticModel* planeObject = planeNode->CreateComponent<StaticModel>();
-    planeObject->SetModel(cache->GetResource<Model>("Models/Plane.mdl"));
-    planeObject->SetMaterial(cache->GetResource<Material>("Materials/StoneTiled.xml"));
+    planeNode->SetScale(Vector3(1,1,1));
+    Terrain* planeObject = planeNode->CreateComponent<Terrain>();
 
     // Create a directional light to the world so that we can see something. The light scene node's orientation controls the
     // light direction; we will use the SetDirection() function which calculates the orientation from a forward direction vector.
@@ -97,31 +103,13 @@ void StaticScene::CreateScene()
     Light* light = lightNode->CreateComponent<Light>();
     light->SetLightType(LIGHT_DIRECTIONAL);
 
-    // Create more StaticModel objects to the scene, randomly positioned, rotated and scaled. For rotation, we construct a
-    // quaternion from Euler angles where the Y angle (rotation about the Y axis) is randomized. The mushroom model contains
-    // LOD levels, so the StaticModel component will automatically select the LOD level according to the view distance (you'll
-    // see the model get simpler as it moves further away). Finally, rendering a large number of the same object with the
-    // same material allows instancing to be used, if the GPU supports it. This reduces the amount of CPU work in rendering the
-    // scene.
-    const unsigned NUM_OBJECTS = 200;
-    for (unsigned i = 0; i < NUM_OBJECTS; ++i)
-    {
-        Node* mushroomNode = scene_->CreateChild("Mushroom");
-        mushroomNode->SetPosition(Vector3(Random(90.0f) - 45.0f, 0.0f, Random(90.0f) - 45.0f));
-        mushroomNode->SetRotation(Quaternion(0.0f, Random(360.0f), 0.0f));
-        mushroomNode->SetScale(0.5f + Random(2.0f));
-        StaticModel* mushroomObject = mushroomNode->CreateComponent<StaticModel>();
-        mushroomObject->SetModel(cache->GetResource<Model>("Models/Mushroom.mdl"));
-        mushroomObject->SetMaterial(cache->GetResource<Material>("Materials/Mushroom.xml"));
-    }
-
     // Create a scene node for the camera, which we will move around
     // The camera will use default settings (1000 far clip distance, 45 degrees FOV, set aspect ratio automatically)
     cameraNode_ = scene_->CreateChild("Camera");
     cameraNode_->CreateComponent<Camera>();
 
     // Set an initial position for the camera scene node above the plane
-    cameraNode_->SetPosition(Vector3(0.0f, 5.0f, 0.0f));
+    cameraNode_->SetPosition(Vector3(0.0f, 5.0f , 0.0f));
 }
 
 void StaticScene::CreateInstructions()

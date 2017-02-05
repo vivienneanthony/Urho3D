@@ -54,7 +54,7 @@ public:
     virtual void OnSetEnabled();
 
     /// Set patch quads per side. Must be a power of two.
-    void SetPatchSize(int size);
+    void SetTerrainRadius(float size);
     /// Set vertex (XZ) and height (Y) spacing.
     void SetSpacing(const Vector3& spacing);
     /// Set maximum number of LOD levels for terrain patches. This can be between 1-4.
@@ -116,10 +116,10 @@ public:
 
     /// Return maximum number of LOD levels for terrain patches. This can be between 1-4.
     unsigned GetMaxLodLevels() const { return maxLodLevels_; }
-    
+
     /// Return LOD level used for occlusion.
     unsigned GetOcclusionLodLevel() const { return occlusionLodLevel_; }
-    
+
     /// Return whether smoothing is in use.
     bool GetSmoothing() const { return smoothing_; }
 
@@ -142,13 +142,13 @@ public:
 
     /// Return north neighbor terrain.
     Terrain* GetNorthNeighbor() const { return north_; }
-    
+
     /// Return south neighbor terrain.
     Terrain* GetSouthNeighbor() const { return south_; }
-    
+
     /// Return west neighbor terrain.
     Terrain* GetWestNeighbor() const { return west_; }
-    
+
     /// Return east neighbor terrain.
     Terrain* GetEastNeighbor() const { return east_; }
 
@@ -209,6 +209,11 @@ public:
     ResourceRef GetHeightMapAttr() const;
     /// Return material attribute.
     ResourceRef GetMaterialAttr() const;
+
+    void BuildPlanet();
+
+    float GetWorldRadius() const {return m_planetRadius;};
+
 
 private:
     /// Regenerate terrain geometry.
@@ -320,6 +325,12 @@ private:
     bool recreateTerrain_;
     /// Terrain neighbor attributes dirty flag.
     bool neighborsDirty_;
+
+    // REBUILDING
+    float m_terrainLODMax;
+    float m_planetRadius;
+
+    Vector<TerrainPatch *> m_Faces;
 };
 
 }

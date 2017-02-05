@@ -39,6 +39,10 @@ class URHO3D_API TerrainPatch : public Drawable
 public:
     /// Construct.
     TerrainPatch(Context* context);
+
+    /// New Construct
+    TerrainPatch(Context* context, unsigned int index, unsigned maxLOD, Terrain * parentTerrain);
+
     /// Destruct.
     ~TerrainPatch();
     /// Register object factory.
@@ -106,6 +110,12 @@ public:
     /// Return current LOD level.
     unsigned GetLodLevel() const { return lodLevel_; }
 
+    Vector3 SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height);
+    void BuildParentNode(Vector3 centre, Vector3 dx, Vector3 dy);
+
+    void CreateIndexData();
+
+
 protected:
     /// Recalculate the world-space bounding box.
     virtual void OnWorldBoundingBoxUpdate();
@@ -138,6 +148,17 @@ private:
     IntVector2 coordinates_;
     /// Current LOD level.
     unsigned lodLevel_;
+
+    unsigned int m_MaxLod;
+    unsigned int m_Index;
+
+    Terrain * m_ParentTerrain;
+
+        /// Draw ranges for different LODs and stitching combinations.
+PODVector<Pair<unsigned, unsigned> > drawRanges_;
+
+  /// Shared index buffer.
+SharedPtr<IndexBuffer> indexBuffer_;
 };
 
 }

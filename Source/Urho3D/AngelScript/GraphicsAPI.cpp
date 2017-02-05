@@ -1787,7 +1787,7 @@ static void RegisterTerrain(asIScriptEngine* engine)
     engine->RegisterObjectMethod("Terrain", "bool get_smoothing() const", asMETHOD(Terrain, GetSmoothing), asCALL_THISCALL);
     engine->RegisterObjectMethod("Terrain", "void set_heightMap(Image@+)", asMETHOD(Terrain, SetHeightMap), asCALL_THISCALL);
     engine->RegisterObjectMethod("Terrain", "Image@+ get_heightMap() const", asMETHOD(Terrain, GetHeightMap), asCALL_THISCALL);
-    engine->RegisterObjectMethod("Terrain", "void set_patchSize(int)", asMETHOD(Terrain, SetPatchSize), asCALL_THISCALL);
+    //edit engine->RegisterObjectMethod("Terrain", "void set_patchSize(int)", asMETHOD(Terrain, SetPatchSize), asCALL_THISCALL);
     engine->RegisterObjectMethod("Terrain", "int get_patchSize() const", asMETHOD(Terrain, GetPatchSize), asCALL_THISCALL);
     engine->RegisterObjectMethod("Terrain", "void set_spacing(const Vector3&in)", asMETHOD(Terrain, SetSpacing), asCALL_THISCALL);
     engine->RegisterObjectMethod("Terrain", "const Vector3& get_spacing() const", asMETHOD(Terrain, GetSpacing), asCALL_THISCALL);
