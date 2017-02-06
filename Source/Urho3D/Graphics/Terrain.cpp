@@ -1,4 +1,3 @@
-
 //
 // Copyright (c) 2008-2017 the Urho3D project.
 //
@@ -30,8 +29,9 @@
 #include "../Graphics/IndexBuffer.h"
 #include "../Graphics/Material.h"
 #include "../Graphics/Octree.h"
-#include "../Graphics/Terrain.h"
+#include "../Graphics/TerrainFace.h"
 #include "../Graphics/TerrainPatch.h"
+#include "../Graphics/Terrain.h"
 #include "../Graphics/VertexBuffer.h"
 #include "../IO/Log.h"
 #include "../Resource/Image.h"
@@ -126,9 +126,9 @@ void Terrain::RegisterObject(Context* context)
 
     URHO3D_ACCESSOR_ATTRIBUTE("Is Enabled", IsEnabled, SetEnabled, bool, true, AM_DEFAULT);
     URHO3D_MIXED_ACCESSOR_ATTRIBUTE("Height Map", GetHeightMapAttr, SetHeightMapAttr, ResourceRef, ResourceRef(Image::GetTypeStatic()),
-        AM_DEFAULT);
+                                    AM_DEFAULT);
     URHO3D_MIXED_ACCESSOR_ATTRIBUTE("Material", GetMaterialAttr, SetMaterialAttr, ResourceRef, ResourceRef(Material::GetTypeStatic()),
-        AM_DEFAULT);
+                                    AM_DEFAULT);
     URHO3D_ATTRIBUTE("North Neighbor NodeID", unsigned, northID_, 0, AM_DEFAULT | AM_NODEID);
     URHO3D_ATTRIBUTE("South Neighbor NodeID", unsigned, southID_, 0, AM_DEFAULT | AM_NODEID);
     URHO3D_ATTRIBUTE("West Neighbor NodeID", unsigned, westID_, 0, AM_DEFAULT | AM_NODEID);
@@ -168,22 +168,22 @@ void Terrain::OnSetAttribute(const AttributeInfo& attr, const Variant& src)
 void Terrain::ApplyAttributes()
 {
     if (recreateTerrain_)
-        CreateGeometry();
+        //CreateGeometry();
 
-    if (neighborsDirty_)
-    {
-        Scene* scene = GetScene();
-        Node* north = scene ? scene->GetNode(northID_) : (Node*)0;
-        Node* south = scene ? scene->GetNode(southID_) : (Node*)0;
-        Node* west = scene ? scene->GetNode(westID_) : (Node*)0;
-        Node* east = scene ? scene->GetNode(eastID_) : (Node*)0;
-        Terrain* northTerrain = north ? north->GetComponent<Terrain>() : (Terrain*)0;
-        Terrain* southTerrain = south ? south->GetComponent<Terrain>() : (Terrain*)0;
-        Terrain* westTerrain = west ? west->GetComponent<Terrain>() : (Terrain*)0;
-        Terrain* eastTerrain = east ? east->GetComponent<Terrain>() : (Terrain*)0;
-        SetNeighbors(northTerrain, southTerrain, westTerrain, eastTerrain);
-        neighborsDirty_ = false;
-    }
+        if (neighborsDirty_)
+        {
+            Scene* scene = GetScene();
+            Node* north = scene ? scene->GetNode(northID_) : (Node*)0;
+            Node* south = scene ? scene->GetNode(southID_) : (Node*)0;
+            Node* west = scene ? scene->GetNode(westID_) : (Node*)0;
+            Node* east = scene ? scene->GetNode(eastID_) : (Node*)0;
+            Terrain* northTerrain = north ? north->GetComponent<Terrain>() : (Terrain*)0;
+            Terrain* southTerrain = south ? south->GetComponent<Terrain>() : (Terrain*)0;
+            Terrain* westTerrain = west ? west->GetComponent<Terrain>() : (Terrain*)0;
+            Terrain* eastTerrain = east ? east->GetComponent<Terrain>() : (Terrain*)0;
+            SetNeighbors(northTerrain, southTerrain, westTerrain, eastTerrain);
+            neighborsDirty_ = false;
+        }
 }
 
 void Terrain::OnSetEnabled()
@@ -197,16 +197,16 @@ void Terrain::OnSetEnabled()
     }
 }
 
-void Terrain::SetPatchSize(int size)
+void Terrain::SetWorldRadius(float size)
 {
-    if (size < MIN_PATCH_SIZE || size > MAX_PATCH_SIZE || !IsPowerOfTwo((unsigned)size))
+    if (size < 0 ||!IsPowerOfTwo((unsigned int)size))
         return;
 
     if (size != patchSize_)
     {
-        patchSize_ = size;
+        m_WorldRadius;
 
-        CreateGeometry();
+        //CreateGeometry();
         MarkNetworkUpdate();
     }
 }
@@ -217,7 +217,7 @@ void Terrain::SetSpacing(const Vector3& spacing)
     {
         spacing_ = spacing;
 
-        CreateGeometry();
+        //CreateGeometry();
         MarkNetworkUpdate();
     }
 }
@@ -230,7 +230,7 @@ void Terrain::SetMaxLodLevels(unsigned levels)
         maxLodLevels_ = levels;
         lastPatchSize_ = 0; // Force full recreate
 
-        CreateGeometry();
+        //CreateGeometry();
         MarkNetworkUpdate();
     }
 }
@@ -242,7 +242,7 @@ void Terrain::SetOcclusionLodLevel(unsigned level)
         occlusionLodLevel_ = level;
         lastPatchSize_ = 0; // Force full recreate
 
-        CreateGeometry();
+        //CreateGeometry();
         MarkNetworkUpdate();
     }
 }
@@ -253,7 +253,7 @@ void Terrain::SetSmoothing(bool enable)
     {
         smoothing_ = enable;
 
-        CreateGeometry();
+        //CreateGeometry();
         MarkNetworkUpdate();
     }
 }
@@ -529,7 +529,9 @@ void Terrain::SetOccludee(bool enable)
 void Terrain::ApplyHeightMap()
 {
     if (heightMap_)
-        CreateGeometry();
+    {
+        //CreateGeometry();
+    }
 }
 
 Image* Terrain::GetHeightMap() const
@@ -1044,7 +1046,7 @@ void Terrain::CreateGeometry()
                     }
 
                     patchNode->SetPosition(Vector3(patchWorldOrigin_.x_ + (float)x * patchWorldSize_.x_, 0.0f,
-                        patchWorldOrigin_.y_ + (float)z * patchWorldSize_.y_));
+                                                   patchWorldOrigin_.y_ + (float)z * patchWorldSize_.y_));
 
                     TerrainPatch* patch = patchNode->GetComponent<TerrainPatch>();
                     if (!patch)
@@ -1099,10 +1101,10 @@ void Terrain::CreateGeometry()
                         for (int x = startX; x <= endX; ++x)
                         {
                             float smoothedHeight = (
-                                GetSourceHeight(x - 1, z - 1) + GetSourceHeight(x, z - 1) * 2.0f + GetSourceHeight(x + 1, z - 1) +
-                                GetSourceHeight(x - 1, z) * 2.0f + GetSourceHeight(x, z) * 4.0f + GetSourceHeight(x + 1, z) * 2.0f +
-                                GetSourceHeight(x - 1, z + 1) + GetSourceHeight(x, z + 1) * 2.0f + GetSourceHeight(x + 1, z + 1)
-                            ) / 16.0f;
+                                                       GetSourceHeight(x - 1, z - 1) + GetSourceHeight(x, z - 1) * 2.0f + GetSourceHeight(x + 1, z - 1) +
+                                                       GetSourceHeight(x - 1, z) * 2.0f + GetSourceHeight(x, z) * 4.0f + GetSourceHeight(x + 1, z) * 2.0f +
+                                                       GetSourceHeight(x - 1, z + 1) + GetSourceHeight(x, z + 1) * 2.0f + GetSourceHeight(x + 1, z + 1)
+                                                   ) / 16.0f;
 
                             heightData_[z * numVertices_.x_ + x] = smoothedHeight;
                         }
@@ -1413,7 +1415,7 @@ void Terrain::SetPatchNeighbors(TerrainPatch* patch)
 
     const IntVector2& coords = patch->GetCoordinates();
     patch->SetNeighbors(GetNeighborPatch(coords.x_, coords.y_ + 1), GetNeighborPatch(coords.x_, coords.y_ - 1),
-        GetNeighborPatch(coords.x_ - 1, coords.y_), GetNeighborPatch(coords.x_ + 1, coords.y_));
+                        GetNeighborPatch(coords.x_ - 1, coords.y_), GetNeighborPatch(coords.x_ + 1, coords.y_));
 }
 
 bool Terrain::SetHeightMapInternal(Image* image, bool recreateNow)
@@ -1433,16 +1435,20 @@ bool Terrain::SetHeightMapInternal(Image* image, bool recreateNow)
     heightMap_ = image;
 
     if (recreateNow)
-        CreateGeometry();
+    {
+        //CreateGeometry();
+    }
     else
+    {
         recreateTerrain_ = true;
+    }
 
     return true;
 }
 
 void Terrain::HandleHeightMapReloadFinished(StringHash eventType, VariantMap& eventData)
 {
-    CreateGeometry();
+    {} //CreateGeometry();}
 }
 
 void Terrain::HandleNeighborTerrainCreated(StringHash eventType, VariantMap& eventData)
@@ -1469,5 +1475,38 @@ void Terrain::UpdateEdgePatchNeighbors()
     SetPatchNeighbors(GetPatch(numPatches_.x_ - 1, numPatches_.y_ - 1));
 }
 
+// build each face
+void Terrain::BuildTerrain(bool recreate, unsigned int mode)
+{
+    m_WorldRadius=2.0f;
+
+    // Calculate the max LOD based on the radius of the planet.  For a planet the size of earth,
+    // the liLODMax is calculated to 46.
+    m_MaxLod = (unsigned int)log2((float)((2.0f * 3.14 * m_WorldRadius) / 4.0f));// Now calucate the size of each cube (planet face).  We will use this variable when defining the world space
+
+    // coordinates of the vertices.
+    unsigned int CubeSize = m_MaxLod * 2;
+    unsigned int HalfCube = CubeSize / 2;
+
+    // Create and build quadtree face #0
+    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+
+    // Create and build quadtree face #0
+    m_Faces.At(0)->SetTerrainFace(0,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.At(1)->SetTerrainFace(1,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.At(2)->SetTerrainFace(2,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.At(3)->SetTerrainFace(3,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.At(4)->SetTerrainFace(4,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.At(5)->SetTerrainFace(5,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
+
+    m_Faces[0]->BuildFace(Vector3(0, 0, HalfCube), Vector3(CubeSize, 0, 0), Vector3(0, CubeSize, 0));
+
+
+}
 }
 

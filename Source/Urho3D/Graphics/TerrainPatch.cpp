@@ -58,9 +58,6 @@ TerrainPatch::TerrainPatch(Context* context) :
     maxLodGeometry_->SetVertexBuffer(0, vertexBuffer_);
     occlusionGeometry_->SetVertexBuffer(0, vertexBuffer_);
 
-    batches_.Resize(1);
-    batches_[0].geometry_ = geometry_;
-    batches_[0].geometryType_ = GEOM_STATIC_NOINSTANCING;
 }
 
 TerrainPatch::~TerrainPatch()
@@ -290,6 +287,7 @@ unsigned TerrainPatch::GetCorrectedLodLevel(unsigned lodLevel)
 
     return lodLevel;
 }
+
 
 }
 

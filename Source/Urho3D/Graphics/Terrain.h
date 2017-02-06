@@ -33,6 +33,7 @@ class IndexBuffer;
 class Material;
 class Node;
 class TerrainPatch;
+class TerrainFace;
 
 /// Heightmap terrain component.
 class URHO3D_API Terrain : public Component
@@ -54,8 +55,11 @@ public:
     /// Handle enabled/disabled state change.
     virtual void OnSetEnabled();
 
+    /// full
+    void BuildTerrain(bool recreate, unsigned int mode);
+
     /// Set patch quads per side. Must be a power of two.
-    void SetTerrainRadius(float size);
+    void SetWorldRadius(float size);
     /// Set vertex (XZ) and height (Y) spacing.
     void SetSpacing(const Vector3& spacing);
     /// Set maximum number of LOD levels for terrain patches. This can be between 1-4.
@@ -213,7 +217,7 @@ public:
 
     void BuildPlanet();
 
-    float GetWorldRadius() const {return m_planetRadius;};
+    float GetWorldRadius() const {return m_WorldRadius;};
 
 
 private:
@@ -329,9 +333,12 @@ private:
 
     // REBUILDING
     float m_terrainLODMax;
-    float m_planetRadius;
+    float m_WorldRadius;
 
-    Vector<TerrainPatch *> m_Faces;
+    // each face
+    Vector<TerrainFace*> m_Faces;
+
+    unsigned int m_MaxLod;
 };
 
 }

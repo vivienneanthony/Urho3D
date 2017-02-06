@@ -93,7 +93,10 @@ void StaticScene::CreateScene()
     // (100 x 100 world units)
     Node* planeNode = scene_->CreateChild("Plane");
     planeNode->SetScale(Vector3(1,1,1));
+    planeNode->SetPosition(Vector3(0,0,0));
+
     Terrain* planeObject = planeNode->CreateComponent<Terrain>();
+    planeObject->SetMaterial(cache->GetResource<Material>("Materials/Stone.xml"));
 
     // Create a directional light to the world so that we can see something. The light scene node's orientation controls the
     // light direction; we will use the SetDirection() function which calculates the orientation from a forward direction vector.
