@@ -31,6 +31,7 @@
 #include "../Graphics/OcclusionBuffer.h"
 #include "../Graphics/OctreeQuery.h"
 #include "../Graphics/TerrainFace.h"
+#include "../Graphics/TerrainPatch.h"
 #include "../Graphics/Terrain.h"
 #include "../Graphics/VertexBuffer.h"
 #include "../IO/Log.h"
@@ -54,25 +55,28 @@ TerrainFace::TerrainFace(Context* context) :
     occlusionGeometry_(new Geometry(context)),
     vertexBuffer_(new VertexBuffer(context)),
     coordinates_(IntVector2::ZERO),
-    m_LodLevel(0)
+    m_LodLevel(0),
+    m_FaceDirection(QuadFaceInvalid)
 {
     // Create new geometry
     geometry_->SetVertexBuffer(0, vertexBuffer_);
     maxLodGeometry_->SetVertexBuffer(0, vertexBuffer_);
     occlusionGeometry_->SetVertexBuffer(0, vertexBuffer_);
 
-    SetEnabled(true);
 }
 
 
 // Create each face detached
-void TerrainFace::SetTerrainFace(unsigned int index, unsigned maxLod, Terrain * parentTerrain )
+void TerrainFace::SetTerrainFace(unsigned int index, QuadFace facedirection, unsigned maxLod, Terrain * parentTerrain )
 {
     m_Index=index;
     m_MaxLod=maxLod;
     m_ParentTerrain=parentTerrain;
+    m_FaceDirection = facedirection;
 
-    SetEnabled(true);
+    m_CubeFaceSize=parentTerrain->GetCubeSize();
+    if(m_CubeFaceSize==0)
+        m_CubeFaceSize=2;
 }
 
 
@@ -97,7 +101,13 @@ void TerrainFace::UpdateBatches(const FrameInfo& frame)
 
 void TerrainFace::UpdateGeometry(const FrameInfo& frame)
 {
-
+    if (vertexBuffer_->IsDataLost())
+    {
+        if (m_ParentTerrain)
+            m_ParentTerrain->BuildTerrain(false,false);
+        else
+            vertexBuffer_->ClearDataLost();
+    }
 }
 
 UpdateGeometryType TerrainFace::GetUpdateGeometryType()
@@ -127,6 +137,16 @@ unsigned TerrainFace::GetNumOccluderTriangles()
 
 bool TerrainFace::DrawOcclusion(OcclusionBuffer* buffer)
 {
+    Material* material = batches_[0].material_;
+    if (material)
+    {
+        if (!material->GetOcclusion())
+            return true;
+        buffer->SetCullMode(material->GetCullMode());
+    }
+    else
+        buffer->SetCullMode(CULL_CCW);
+
     const unsigned char* vertexData;
     unsigned vertexSize;
     const unsigned char* indexData;
@@ -137,6 +157,7 @@ bool TerrainFace::DrawOcclusion(OcclusionBuffer* buffer)
     // Check for valid geometry data
     if (!vertexData || !elements || VertexBuffer::GetElementOffset(*elements, TYPE_VECTOR3, SEM_POSITION) != 0)
     {
+        URHO3D_LOGINFO("invalid");
         return false;
     }
 
@@ -144,7 +165,7 @@ bool TerrainFace::DrawOcclusion(OcclusionBuffer* buffer)
     buffer->AddTriangles(node_->GetWorldTransform(), vertexData, vertexSize, geometry_->GetVertexStart(),
                          geometry_->GetVertexCount());
 
-
+    URHO3D_LOGINFO("draw");
 }
 
 void TerrainFace::DrawDebugGeometry(DebugRenderer* debug, bool depthTest)
@@ -159,10 +180,7 @@ void TerrainFace::SetOwner(Terrain* terrain)
 
 void TerrainFace::SetNeighbors(TerrainFace* north, TerrainFace* south, TerrainFace* west, TerrainFace* east)
 {
-    //north_ = north;
-    //south_ = south;
-    //west_ = west;
-    //east_ = east;
+
 }
 
 void TerrainFace::SetMaterial(Material* material)
@@ -218,81 +236,46 @@ unsigned TerrainFace::GetCorrectedLodLevel(unsigned lodLevel)
     return lodLevel;
 }
 
-void TerrainFace::BuildFace(Vector3 centre, Vector3 dx, Vector3 dy)
+void TerrainFace::Build()
 {
-    // Define the grid size.  i.e. the number of vertices in a grid (16x16)
-    unsigned int PatchSize = 16;
-    unsigned int PatchSizePlus = 17; // PatchSize + 1
+    // if Parent Terrain is set
+    if(m_ParentTerrain)
+        m_ParentTerrain->BuildFace(this);
 
-    // Set buffer
-    vertexBuffer_->SetSize(PatchSize*PatchSize, MASK_POSITION | MASK_NORMAL | MASK_TEXCOORD1,true);
+}
 
-    Vector<float> _vertexData;
+void TerrainFace::CreateTerrainPatch(Vector3 coordinates, int facesize, unsigned int GridSize)
+{
+    // if no parent
+    if(!m_ParentTerrain)
+        return;
 
-    // Didn't work
-    float* tempVertexBuffer = (float*)vertexBuffer_->Lock(0, vertexBuffer_->GetVertexCount());
+    //create a new patch
+    TerrainPatch * CreatedTerrainPatch = new TerrainPatch(context_);
 
-    int xPos=0;
-    int yPos=0;
-
-    // loop through and create a grid of vertices.
-    for (int u = 0; u <= PatchSize; u++)
+    // Created terrain patch
+    if(CreatedTerrainPatch)
     {
-        for (int v = 0; v <= PatchSize; v++)
-        {
+        // Use three 3d coordinates
+        CreatedTerrainPatch->SetCoordinates(coordinates);
 
-            // Create the vertex grid around the centre of thecube face (which is passed into the function as Vector3 centre).
-            Vector3 tempPosition = centre + (dx / PatchSize) * (v - PatchSize / 2) + (dy / PatchSize) * (u - PatchSize / 2);
+        // Set Face Size Should be enougth to recreate
+        CreatedTerrainPatch ->SetFaceSize(facesize); // Set Cube Size/1
 
-            // This is where we would define the height of the vertex.
-            float fheight = 0;
+        CreatedTerrainPatch->SetFaceDirection(m_FaceDirection);
 
-            // Project the vertex onto the sphere, taking into consideration the height of the
-            // vertex and the radius of the planet.  By specifying 0 as the height, we will
-            // get a 'perfectly' round planet/sphere.
-            Vector3 newPosition = SurfaceVectorToCoordinates(tempPosition, m_ParentTerrain->GetWorldRadius(), fheight);
+        CreatedTerrainPatch->SetBasePatchSize(GridSize);
 
-            // copy vertex
-            _vertexData.Push(newPosition.x_);
-            _vertexData.Push(newPosition.y_);
-            _vertexData.Push(newPosition.z_);
+        CreatedTerrainPatch->SetTerrain(m_ParentTerrain);
 
-            // Normal
-            _vertexData.Push(1.0f);
-            _vertexData.Push(1.0f);
-            _vertexData.Push(1.0f); //should point to parent center)
+        // Create a new patch
+        m_TerrainPatches.Push(CreatedTerrainPatch);
 
-            // Normal
-            Vector2 texCoord((float)u/ (float)( PatchSize - 1), 1.0f - (float)v / (float)( PatchSize  - 1));
-            _vertexData.Push(texCoord.x_);
-            _vertexData.Push(texCoord.y_);
-        }
+
+        m_ParentTerrain->BuildPatch(CreatedTerrainPatch);
     }
 
-    vertexBuffer_->SetData((float *) tempVertexBuffer);
 
-    vertexBuffer_->Unlock();
+
 }
-
-/// <summary>
-/// Transforms a vector from the surface of a cube, onto the surface of a sphere.
-/// </summary>
-/// surfacePos is the vertex position on the cube.
-/// radius is the radius of the planet.
-/// height is the height of the terrain at this position.
-Vector3 TerrainFace::SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height)
-{
-
-// Create a return veriable.
-    Vector3 loReturnData = surfacePos;
-
-// Get a unit vector ( this will 'point' in the correct direction, from (0,0,0) to
-// the position of the vertex on the sphere ).
-    loReturnData.Normalize();
-
-// Add the planet radius and the height of the vertex, and return the vector.
-    return loReturnData *(radius + height);
-}
-
-
 }

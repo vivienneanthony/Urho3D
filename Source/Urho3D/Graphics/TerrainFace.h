@@ -29,7 +29,29 @@ namespace Urho3D
 
 class Geometry;
 class Terrain;
+class TerrainPatch;
 class VertexBuffer;
+
+enum QuadFace
+{
+    Pos_X=0,
+    Neg_X,
+    Pos_Y,
+    Neg_Y,
+    Pos_Z,
+    Neg_Z,
+    QuadFaceInvalid
+};
+
+const static Vector3  TerrainFaceCoordinate[] =
+{
+    {-1,0,0},
+    {1,0,0},
+    {0,1,0},
+    {0,-1,0},
+    {0,0,1},
+    {0,0,-1}
+};
 
 /// Individually rendered part of a heightmap terrain.
 class URHO3D_API TerrainFace : public Drawable
@@ -43,7 +65,7 @@ public:
     TerrainFace(Context* context);
 
     // Set Terrain face
-    void SetTerrainFace(unsigned int index, unsigned maxLOD, Terrain * parentTerrain);
+    void SetTerrainFace(unsigned int index, QuadFace faceDirection, unsigned maxLOD, Terrain * parentTerrain);
 
     /// Destruct.
     ~TerrainFace();
@@ -80,7 +102,7 @@ public:
     /// Reset to LOD level 0.
     void ResetLod();
 
-    void BuildFace(Vector3 centre, Vector3 dx, Vector3 dy);
+    void BuildFace(TerrainFace * terrainFace);
 
     Vector3 SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height);
 
@@ -137,9 +159,23 @@ public:
         return lodLevel_;
     }
 
-    void BuildParentNode(Vector3 centre, Vector3 dx, Vector3 dy);
 
     void CreateIndexData();
+
+    void Build();
+
+    unsigned int GetCubeFaceSize()
+    {
+        return m_CubeFaceSize;
+    };
+    QuadFace GetFaceDirection()
+    {
+        return m_FaceDirection;
+    };
+
+
+    void CreateTerrainPatch(Vector3 coordinates, int facesize, unsigned int GridSize);
+
 
 
 protected:
@@ -187,17 +223,15 @@ private:
     // Current Mod Level
     unsigned int m_LodLevel;
 
+    // Face Direction
+    QuadFace m_FaceDirection;
 
-    // Draw ranges for different LODs and stitching combinations.
-    //PODVector<Pair<unsigned, unsigned> > drawRanges_;
+    //Face Size
+    unsigned m_CubeFaceSize;
 
-    // Shared index buffer.
-    //SharedPtr<IndexBuffer> indexBuffer_;
+    Vector<TerrainPatch *> m_TerrainPatches;
 
-
-
-
-
+    int m_BasePatchSize;
 };
 
 }

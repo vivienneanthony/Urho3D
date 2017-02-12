@@ -43,6 +43,7 @@
 #include "../Graphics/StaticModelGroup.h"
 #include "../Graphics/Technique.h"
 #include "../Graphics/Terrain.h"
+#include "../Graphics/TerrainFace.h"
 #include "../Graphics/TerrainPatch.h"
 #include "../Graphics/Texture2D.h"
 #include "../Graphics/Texture2DArray.h"
@@ -387,6 +388,7 @@ void RegisterGraphicsLibrary(Context* context)
     CustomGeometry::RegisterObject(context);
     DecalSet::RegisterObject(context);
     Terrain::RegisterObject(context);
+    TerrainFace::RegisterObject(context);
     TerrainPatch::RegisterObject(context);
     DebugRenderer::RegisterObject(context);
     Octree::RegisterObject(context);

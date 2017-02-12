@@ -32,6 +32,40 @@ class Scene;
 
 }
 
+
+enum QuadFace
+{
+    Pos_X=0,
+    Neg_X,
+    Pos_Y,
+    Neg_Y,
+    Pos_Z,
+    Neg_Z,
+    QuadFaceInvalid
+};
+
+const static Vector3  TerrainFaceCoordinate[] =
+{
+    {-1,0,0},
+    {1,0,0},
+    {0,1,0},
+    {0,-1,0},
+    {0,0,1},
+    {0,0,-1}
+};
+
+const static Vector3  TerrainFaceNormalCoordinate[] =
+{
+    {-1,0,0},
+    {0,-1,0},
+    {1,0,0},
+    {0,1,0},
+    {0,0,1},
+    {0,0,-1}
+};
+
+
+
 /// Dynamic geometry example.
 /// This sample demonstrates:
 ///     - Cloning a Model resource
@@ -50,17 +84,19 @@ public:
 
 protected:
     /// Return XML patch instructions for screen joystick layout for a specific sample app, if any.
-    virtual String GetScreenJoystickPatchString() const { return
-        "<patch>"
-        "    <remove sel=\"/element/element[./attribute[@name='Name' and @value='Button0']]/attribute[@name='Is Visible']\" />"
-        "    <replace sel=\"/element/element[./attribute[@name='Name' and @value='Button0']]/element[./attribute[@name='Name' and @value='Label']]/attribute[@name='Text']/@value\">Animation</replace>"
-        "    <add sel=\"/element/element[./attribute[@name='Name' and @value='Button0']]\">"
-        "        <element type=\"Text\">"
-        "            <attribute name=\"Name\" value=\"KeyBinding\" />"
-        "            <attribute name=\"Text\" value=\"SPACE\" />"
-        "        </element>"
-        "    </add>"
-        "</patch>";
+    virtual String GetScreenJoystickPatchString() const
+    {
+        return
+            "<patch>"
+            "    <remove sel=\"/element/element[./attribute[@name='Name' and @value='Button0']]/attribute[@name='Is Visible']\" />"
+            "    <replace sel=\"/element/element[./attribute[@name='Name' and @value='Button0']]/element[./attribute[@name='Name' and @value='Label']]/attribute[@name='Text']/@value\">Animation</replace>"
+            "    <add sel=\"/element/element[./attribute[@name='Name' and @value='Button0']]\">"
+            "        <element type=\"Text\">"
+            "            <attribute name=\"Name\" value=\"KeyBinding\" />"
+            "            <attribute name=\"Text\" value=\"SPACE\" />"
+            "        </element>"
+            "    </add>"
+            "</patch>";
     }
 
 private:

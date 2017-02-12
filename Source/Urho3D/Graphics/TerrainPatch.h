@@ -24,6 +24,8 @@
 
 #include "../Graphics/Drawable.h"
 
+#include "TerrainFace.h"
+
 namespace Urho3D
 {
 
@@ -75,6 +77,8 @@ public:
     void SetBoundingBox(const BoundingBox& box);
     /// Set patch coordinates.
     void SetCoordinates(const IntVector2& coordinates);
+    /// Set patch coordinates.
+    void SetCoordinates(Vector3 coordinates);
     /// Reset to LOD level 0.
     void ResetLod();
 
@@ -90,25 +94,46 @@ public:
     Terrain* GetOwner() const;
 
     /// Return north neighbor patch.
-    TerrainPatch* GetNorthPatch() const { return north_; }
+    TerrainPatch* GetNorthPatch() const
+    {
+        return north_;
+    }
 
     /// Return south neighbor patch.
-    TerrainPatch* GetSouthPatch() const { return south_; }
+    TerrainPatch* GetSouthPatch() const
+    {
+        return south_;
+    }
 
     /// Return west neighbor patch.
-    TerrainPatch* GetWestPatch() const { return west_; }
+    TerrainPatch* GetWestPatch() const
+    {
+        return west_;
+    }
 
     /// Return east neighbor patch.
-    TerrainPatch* GetEastPatch() const { return east_; }
+    TerrainPatch* GetEastPatch() const
+    {
+        return east_;
+    }
 
     /// Return geometrical error array.
-    PODVector<float>& GetLodErrors() { return lodErrors_; }
+    PODVector<float>& GetLodErrors()
+    {
+        return lodErrors_;
+    }
 
     /// Return patch coordinates.
-    const IntVector2& GetCoordinates() const { return coordinates_; }
+    const IntVector2& GetCoordinates() const
+    {
+        return coordinates_;
+    }
 
     /// Return current LOD level.
-    unsigned GetLodLevel() const { return lodLevel_; }
+    unsigned GetLodLevel() const
+    {
+        return lodLevel_;
+    }
 
     Vector3 SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height);
     void BuildParentNode(Vector3 centre, Vector3 dx, Vector3 dy);
@@ -116,7 +141,55 @@ public:
     void CreateIndexData();
 
 
-protected:
+    void CreateTerrainPatch(Vector2 coordinates);
+
+    void SetFaceSize(unsigned int size);
+
+    QuadFace GetFaceDirection()
+    {
+        return m_FaceDirection;
+    };
+    unsigned int GetCubeFaceSize()
+    {
+        return m_FaceSize;
+    };
+
+    unsigned int GetPatchSize()
+    {
+        return m_PatchSize;
+    };
+
+    Vector3 GetPatchCoordinates()
+    {
+        return m_Coordinates;
+    };
+
+    void SetTerrainPatchSize(unsigned int size);
+
+    void SetFaceDirection(QuadFace direction) {m_FaceDirection=direction;};
+
+    void SetBasePatchSize(int size)
+    {
+        m_BasePatchSize=size;
+    };
+
+    int GetBasePatchSize()
+    {
+        return m_BasePatchSize;
+    }
+
+
+    void SetTerrain(Terrain *terrain)
+    {
+        m_ParentTerrain = terrain;
+    }
+
+    Terrain * GetParentTerrain()
+    {
+        return m_ParentTerrain;
+    }
+
+ protected:
     /// Recalculate the world-space bounding box.
     virtual void OnWorldBoundingBoxUpdate();
 
@@ -154,11 +227,24 @@ private:
 
     Terrain * m_ParentTerrain;
 
-        /// Draw ranges for different LODs and stitching combinations.
-PODVector<Pair<unsigned, unsigned> > drawRanges_;
+    /// Draw ranges for different LODs and stitching combinations.
+    PODVector<Pair<unsigned, unsigned> > drawRanges_;
 
-  /// Shared index buffer.
-SharedPtr<IndexBuffer> indexBuffer_;
+    /// Shared index buffer.
+    SharedPtr<IndexBuffer> indexBuffer_;
+
+    Vector<TerrainPatch> m_TerrainPatches;
+
+    Vector3 m_Coordinates;
+
+    unsigned int m_FaceSize;
+
+    QuadFace m_FaceDirection;
+
+    unsigned m_PatchSize;
+
+    unsigned m_BasePatchSize;
+
 };
 
 }

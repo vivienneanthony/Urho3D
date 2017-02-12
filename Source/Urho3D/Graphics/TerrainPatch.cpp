@@ -81,32 +81,32 @@ void TerrainPatch::ProcessRayQuery(const RayOctreeQuery& query, PODVector<RayQue
 
     case RAY_OBB:
     case RAY_TRIANGLE:
+    {
+        Matrix3x4 inverse(node_->GetWorldTransform().Inverse());
+        Ray localRay = query.ray_.Transformed(inverse);
+        float distance = localRay.HitDistance(boundingBox_);
+        Vector3 normal = -query.ray_.direction_;
+
+        if (level == RAY_TRIANGLE && distance < query.maxDistance_)
         {
-            Matrix3x4 inverse(node_->GetWorldTransform().Inverse());
-            Ray localRay = query.ray_.Transformed(inverse);
-            float distance = localRay.HitDistance(boundingBox_);
-            Vector3 normal = -query.ray_.direction_;
-
-            if (level == RAY_TRIANGLE && distance < query.maxDistance_)
-            {
-                Vector3 geometryNormal;
-                distance = geometry_->GetHitDistance(localRay, &geometryNormal);
-                normal = (node_->GetWorldTransform() * Vector4(geometryNormal, 0.0f)).Normalized();
-            }
-
-            if (distance < query.maxDistance_)
-            {
-                RayQueryResult result;
-                result.position_ = query.ray_.origin_ + distance * query.ray_.direction_;
-                result.normal_ = normal;
-                result.distance_ = distance;
-                result.drawable_ = this;
-                result.node_ = node_;
-                result.subObject_ = M_MAX_UNSIGNED;
-                results.Push(result);
-            }
+            Vector3 geometryNormal;
+            distance = geometry_->GetHitDistance(localRay, &geometryNormal);
+            normal = (node_->GetWorldTransform() * Vector4(geometryNormal, 0.0f)).Normalized();
         }
-        break;
+
+        if (distance < query.maxDistance_)
+        {
+            RayQueryResult result;
+            result.position_ = query.ray_.origin_ + distance * query.ray_.direction_;
+            result.normal_ = normal;
+            result.distance_ = distance;
+            result.drawable_ = this;
+            result.node_ = node_;
+            result.subObject_ = M_MAX_UNSIGNED;
+            results.Push(result);
+        }
+    }
+    break;
 
     case RAY_TRIANGLE_UV:
         URHO3D_LOGWARNING("RAY_TRIANGLE_UV query level is not supported for TerrainPatch component");
@@ -202,7 +202,7 @@ bool TerrainPatch::DrawOcclusion(OcclusionBuffer* buffer)
 
     // Draw and check for running out of triangles
     return buffer->AddTriangles(node_->GetWorldTransform(), vertexData, vertexSize, indexData, indexSize, occlusionGeometry_->GetIndexStart(),
-        occlusionGeometry_->GetIndexCount());
+                                occlusionGeometry_->GetIndexCount());
 }
 
 void TerrainPatch::DrawDebugGeometry(DebugRenderer* debug, bool depthTest)
@@ -237,6 +237,12 @@ void TerrainPatch::SetBoundingBox(const BoundingBox& box)
 void TerrainPatch::SetCoordinates(const IntVector2& coordinates)
 {
     coordinates_ = coordinates;
+}
+
+void TerrainPatch::SetCoordinates(Vector3 coordinates)
+{
+    //coordinates_ = coordinates;
+    m_Coordinates = coordinates;
 }
 
 void TerrainPatch::ResetLod()
@@ -288,6 +294,16 @@ unsigned TerrainPatch::GetCorrectedLodLevel(unsigned lodLevel)
     return lodLevel;
 }
 
+
+void TerrainPatch::SetFaceSize(unsigned int size)
+{
+    m_FaceSize=size;
+}
+
+void TerrainPatch::SetTerrainPatchSize(unsigned int size)
+{
+    m_PatchSize = size;
+}
 
 }
 

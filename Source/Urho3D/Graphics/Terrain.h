@@ -128,6 +128,8 @@ public:
     /// Return whether smoothing is in use.
     bool GetSmoothing() const { return smoothing_; }
 
+    void BuildPatch(TerrainPatch * terrainPatch);
+
     /// Return heightmap image.
     Image* GetHeightMap() const;
     /// Return material.
@@ -144,6 +146,8 @@ public:
     Vector3 GetNormal(const Vector3& worldPosition) const;
     /// Convert world position to heightmap pixel position. Note that the internal height data representation is reversed vertically, but in the heightmap image north is at the top.
     IntVector2 WorldToHeightMap(const Vector3& worldPosition) const;
+
+    int GetCubeSize(void){return m_CubeSize;};
 
     /// Return north neighbor terrain.
     Terrain* GetNorthNeighbor() const { return north_; }
@@ -218,6 +222,12 @@ public:
     void BuildPlanet();
 
     float GetWorldRadius() const {return m_WorldRadius;};
+
+
+    void BuildFace(TerrainFace * terrainFace);
+
+    Vector3 SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height);
+
 
 
 private:
@@ -339,6 +349,8 @@ private:
     Vector<TerrainFace*> m_Faces;
 
     unsigned int m_MaxLod;
+
+    unsigned m_CubeSize;
 };
 
 }

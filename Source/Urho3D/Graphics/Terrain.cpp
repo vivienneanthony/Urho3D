@@ -1092,13 +1092,13 @@ void Terrain::CreateGeometry()
                     TerrainPatch* patch = patches_[i];
                     const IntVector2& coords = patch->GetCoordinates();
                     int startX = coords.x_ * patchSize_;
-                    int endX = startX + patchSize_;
+                    int endirection_x = startX + patchSize_;
                     int startZ = coords.y_ * patchSize_;
                     int endZ = startZ + patchSize_;
 
                     for (int z = startZ; z <= endZ; ++z)
                     {
-                        for (int x = startX; x <= endX; ++x)
+                        for (int x = startX; x <= endirection_x; ++x)
                         {
                             float smoothedHeight = (
                                                        GetSourceHeight(x - 1, z - 1) + GetSourceHeight(x, z - 1) * 2.0f + GetSourceHeight(x + 1, z - 1) +
@@ -1478,35 +1478,217 @@ void Terrain::UpdateEdgePatchNeighbors()
 // build each face
 void Terrain::BuildTerrain(bool recreate, unsigned int mode)
 {
-    m_WorldRadius=2.0f;
+    // Set a preset radius
+    m_WorldRadius=8.0f;
 
     // Calculate the max LOD based on the radius of the planet.  For a planet the size of earth,
-    // the liLODMax is calculated to 46.
     m_MaxLod = (unsigned int)log2((float)((2.0f * 3.14 * m_WorldRadius) / 4.0f));// Now calucate the size of each cube (planet face).  We will use this variable when defining the world space
 
     // coordinates of the vertices.
-    unsigned int CubeSize = m_MaxLod * 2;
-    unsigned int HalfCube = CubeSize / 2;
+    m_CubeSize = m_MaxLod * 2;  // set cube size
+    unsigned int m_HalfCube = m_CubeSize / 2;  // half size
 
     // Create and build quadtree face #0
     m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    //m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    //m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    //m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    //m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    // m_Faces.Push(new TerrainFace(context_));// Now call the function which will create the actual mesh data for this quadtree/planet face.
 
     // Create and build quadtree face #0
-    m_Faces.At(0)->SetTerrainFace(0,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.At(1)->SetTerrainFace(1,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.At(2)->SetTerrainFace(2,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.At(3)->SetTerrainFace(3,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.At(4)->SetTerrainFace(4,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
-    m_Faces.At(5)->SetTerrainFace(5,m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
+    m_Faces.At(0)->SetTerrainFace(0, Pos_X, m_MaxLod, this);// Now call the function which will create the actual mesh data for this quadtree/planet face.
 
-    m_Faces[0]->BuildFace(Vector3(0, 0, HalfCube), Vector3(CubeSize, 0, 0), Vector3(0, CubeSize, 0));
-
+    m_Faces.At(0)->Build();
 
 }
+
+// Build Face
+void Terrain::BuildFace(TerrainFace * terrainFace)
+{
+    // create a index buffer
+    IndexBuffer * indexBuffer_ = new IndexBuffer(context_);
+
+    // Define the grid size.  i.e. the number of vertices in a grid (8x8)
+    int PatchSize = 2;
+    int PatchSizePlus =3; // PatchSize + 1
+
+    // Get Cube Center
+    Vector3 center = terrainFace->GetCubeFaceSize()/2*TerrainFaceCoordinate[terrainFace->GetFaceDirection()];
+
+    // Null Vector
+    Vector3 direction_x=Vector3::ZERO;
+    Vector3 direction_y=Vector3::ZERO;
+
+    // Get direction map to direction_x
+    switch(terrainFace->GetFaceDirection())
+    {
+    case Pos_X:
+        direction_x = terrainFace->GetCubeFaceSize()*Vector3(0,1,0);
+        direction_y = terrainFace->GetCubeFaceSize()*Vector3(0,0,1);
+        break;
+    case Neg_X:
+        direction_x = terrainFace->GetCubeFaceSize()*Vector3(0,1,0);
+        direction_y = terrainFace->GetCubeFaceSize()*Vector3(0,0,1);
+        break;
+    case Pos_Y:
+        direction_x = terrainFace->GetCubeFaceSize()*Vector3(1,0,0);
+        direction_y = terrainFace->GetCubeFaceSize()*Vector3(0,0,1);
+        break;
+    case Neg_Y:
+        direction_x = terrainFace->GetCubeFaceSize()*Vector3(1,0,0);
+        direction_y = terrainFace->GetCubeFaceSize()*Vector3(0,0,1);
+        break;
+    case Pos_Z:
+        direction_x = terrainFace->GetCubeFaceSize()*Vector3(1,0,0);
+        direction_y = terrainFace->GetCubeFaceSize()*Vector3(0,1,0);
+        break;
+    case Neg_Z:
+        direction_x = terrainFace->GetCubeFaceSize()*Vector3(1,0,0);
+        direction_y = terrainFace->GetCubeFaceSize()*Vector3(0,1,0);
+        break;
+    }
+
+    // Get face direction
+    QuadFace direction = terrainFace->GetFaceDirection();
+
+    // loop through and create a grid of vertices.
+    for (int u = 0; u <= PatchSize; u++)
+    {
+        for (int v = 0; v <= PatchSize; v++)
+        {
+            // Calculate patch size
+            Vector3 x=(direction_x / PatchSize) * (v - PatchSize / 2);
+            Vector3 y=(direction_y / PatchSize) * (u - PatchSize / 2);
+
+            // Create the vertex grid around the center of thecube face (which is passed into the function as Vector3 center).
+            Vector3 tempPosition = center+x+y;
+
+            // This is where we would define the height of the vertex.
+            float fheight = 0;
+
+
+            // new position
+            URHO3D_LOGINFO("vertex "+tempPosition.ToString());
+
+            // Surface to vector
+            Vector3 newPosition = SurfaceVectorToCoordinates(tempPosition, m_WorldRadius, fheight);
+
+            if(u<PatchSize&&v<PatchSize)
+            {
+                terrainFace->CreateTerrainPatch(tempPosition, terrainFace->GetCubeFaceSize()/PatchSize, PatchSize);
+            }
+        }
+    }
+}
+
+// Build Patch
+void Terrain::BuildPatch(TerrainPatch * terrainPatch)
+{
+    // Define the grid size.  i.e. the number of vertices in a grid (8x8)
+    int PatchSize = 2;
+    int PatchSizePlus = 3;
+    float CubeFaceSize = terrainPatch->GetCubeFaceSize()-1;
+    QuadFace direction = terrainPatch->GetFaceDirection();
+
+    // Null Vector
+    Vector3 direction_x=Vector3::ZERO;
+    Vector3 direction_y=Vector3::ZERO;
+
+
+    // Get Cube Center
+    Vector3 center = ((float)CubeFaceSize/2)*TerrainFaceCoordinate[direction];
+
+    // Calculate direction based of x
+    switch(direction)
+    {
+    case Pos_X:
+        direction_x = CubeFaceSize*Vector3(0,1,0);
+        direction_y = CubeFaceSize*Vector3(0,0,1);
+        break;
+    case Neg_X:
+        direction_x = CubeFaceSize*Vector3(0,1,0);
+        direction_y = CubeFaceSize*Vector3(0,0,1);
+        break;
+    case Pos_Y:
+        direction_x = CubeFaceSize*Vector3(1,0,0);
+        direction_y = CubeFaceSize*Vector3(0,0,1);
+        break;
+    case Neg_Y:
+        direction_x = CubeFaceSize*Vector3(1,0,0);
+        direction_y = CubeFaceSize*Vector3(0,0,1);
+        break;
+    case Pos_Z:
+        direction_x = CubeFaceSize*Vector3(1,0,0);
+        direction_y = CubeFaceSize*Vector3(0,1,0);
+        break;
+    case Neg_Z:
+        direction_x = CubeFaceSize*Vector3(1,0,0);
+        direction_y = CubeFaceSize*Vector3(0,1,0);
+        break;
+    }
+
+
+    switch(direction)
+    {
+    case Pos_X:
+        center=(center*Vector3(0,1,1))+(terrainPatch->GetPatchCoordinates()*Vector3(1,1,1));
+        break;
+    case Neg_X:
+        center=(center*Vector3(0,1,1))+(terrainPatch->GetPatchCoordinates()*Vector3(1,1,1));
+        break;
+    }
+
+    // loop through and create a grid of vertices.
+    for (int u = 0; u <= PatchSize; u++)
+    {
+        for (int v = 0; v <= PatchSize; v++)
+        {
+            // Calculate patch size
+            Vector3 x=(direction_x / PatchSize) * (v- PatchSize / 2);
+            Vector3 y=(direction_y / PatchSize) * (u- PatchSize / 2);
+
+            // Calculate center adding to base center 3d - coordinate
+
+
+
+            // Create the vertex grid around the center of thecube face (which is passed into the function as Vector3 center).
+            Vector3 tempPosition = center+ x+y;
+
+            // This is where we would define the height of the vertex.
+            float fheight = 0;
+
+            // new position
+            URHO3D_LOGINFO(" "+tempPosition.ToString());
+
+            // Surface to vector
+            Vector3 newPosition = SurfaceVectorToCoordinates(tempPosition, m_WorldRadius, fheight);
+
+        }
+    }
+}
+
+
+/// <summary>
+/// Transforms a vector from the surface of a cube, onto the surface of a sphere.
+/// </summary>
+/// surfacePos is the vertex position on the cube.
+/// radius is the radius of the planet.
+/// height is the height of the terrain at this position.
+Vector3 Terrain::SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height)
+{
+
+// Create a return veriable.
+    Vector3 loReturnData = surfacePos;
+
+// Get a unit vector ( this will 'point' in the correct direction, from (0,0,0) to
+// the position of the vertex on the sphere ).
+    loReturnData.Normalize();
+
+// Add the planet radius and the height of the vertex, and return the vector.
+    return loReturnData *(radius + height);
+}
+
+
 }
 
