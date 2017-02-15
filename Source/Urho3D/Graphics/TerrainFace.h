@@ -53,6 +53,18 @@ const static Vector3  TerrainFaceCoordinate[] =
     {0,0,-1}
 };
 
+
+const static Vector3  TerrainNormalFaceCoordinate[] =
+{
+    {-1,0,0},
+    {1,0,0},
+    {0,-1,0},
+    {1,0,0},
+    {0,-1,0},
+    {0,-1,1}
+};
+
+
 /// Individually rendered part of a heightmap terrain.
 class URHO3D_API TerrainFace : public Drawable
 {

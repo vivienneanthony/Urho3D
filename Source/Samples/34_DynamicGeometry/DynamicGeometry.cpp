@@ -118,11 +118,11 @@ void DynamicGeometry::CreateScene()
 
 
     // set chunks or patches
-    int PatchSize=8;
+    int PatchSize=12;
 
 
     // Set Cube size
-    float CubeSize=10;;
+    float CubeSize=10;
 
     // Get Cube Center - Create Defaults
     Vector3 center = Vector3::ZERO;
@@ -135,11 +135,12 @@ void DynamicGeometry::CreateScene()
     Vector<unsigned short> indexData;
 
     // Create a index
-    unsigned int index = 0;
+    unsigned short index = 0;
+
+    //unsigned int* vertexMemory =(unsigned int *)new float[6*PatchSize*PatchSize*12*3];
 
     for(unsigned int face=0; face< 6; face++)
     {
-
         // Get Cube Center
         center = ((float)CubeSize/2)*TerrainFaceCoordinate[face];
 
@@ -151,7 +152,7 @@ void DynamicGeometry::CreateScene()
             direction_y = CubeSize*Vector3(0,0,1);
             break;
         case Neg_X:
-            direction_x = CubeSize*Vector3(0,1,0);
+            direction_x = CubeSize*Vector3(0,-1,0);
             direction_y = CubeSize*Vector3(0,0,1);
             break;
         case Pos_Y:
@@ -160,11 +161,11 @@ void DynamicGeometry::CreateScene()
             break;
         case Neg_Y:
             direction_x = CubeSize*Vector3(1,0,0);
-            direction_y = CubeSize*Vector3(0,0,1);
+            direction_y = CubeSize*Vector3(0,0,-1);
             break;
         case Pos_Z:
             direction_x = CubeSize*Vector3(1,0,0);
-            direction_y = CubeSize*Vector3(0,1,0);
+            direction_y = CubeSize*Vector3(0,-1,0);
             break;
         case Neg_Z:
             direction_x = CubeSize*Vector3(1,0,0);
@@ -186,13 +187,13 @@ void DynamicGeometry::CreateScene()
 
                 // Calculate patch size
                 Vector3 x1=(direction_x / PatchSize) * (v - PatchSize / 2);
-                Vector3 y1=(direction_y / PatchSize) * (u+1- PatchSize / 2);
+                Vector3 y1=(direction_y / PatchSize) * ((u+1)- PatchSize / 2);
 
                 // Create the vertex grid around the center of thecube face (which is passed into the function as Vector3 center).
                 Vector3 v1= center+ x1+y1;
 
                 // Calculate patch size
-                Vector3 x2=(direction_x / PatchSize) * (v+1- PatchSize / 2);
+                Vector3 x2=(direction_x / PatchSize) * ((v+1)- PatchSize / 2);
                 Vector3 y2=(direction_y / PatchSize) * (u- PatchSize / 2);
 
                 // Create the vertex grid around the center of thecube face (which is passed into the function as Vector3 center).
@@ -205,43 +206,92 @@ void DynamicGeometry::CreateScene()
                 // Create the vertex grid around the center of thecube face (which is passed into the function as Vector3 center).
                 Vector3 v3=center+ x3+y3;
 
-                Vector3 edge1 = v2-v1;
-                Vector3 edge2 = v3-v1;
+                //Vector3 n1 = edge2.CrossProduct(edge1).Normalized(); - predefined cut processing
+                Vector3 n1 = TerrainFaceNormalCoordinate[face];
 
-                Vector3 n1 = edge1.CrossProduct(edge2).Normalized();
-
-                // order is wrong
-                vertexData.Push(v0);
+                // render each point to a sphere
+                vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
                 vertexData.Push(n1);
                 indexData.Push(index++);
 
-                vertexData.Push(v1);
+                // testing
+                vertexData.Push(SurfaceVectorToCoordinates(v1,2.0f,0.0f));
                 vertexData.Push(n1);
                 indexData.Push(index++);
 
-
-
-                vertexData.Push(v2);
+                vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
                 vertexData.Push(n1);
                 indexData.Push(index++);
 
-
-                vertexData.Push(v1);
+                vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
                 vertexData.Push(n1);
                 indexData.Push(index++);
 
-
-
-                vertexData.Push(v2);
+                vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
                 vertexData.Push(n1);
                 indexData.Push(index++);
 
-
-                vertexData.Push(v3);
+                // hmm
+                vertexData.Push(SurfaceVectorToCoordinates(v2,2.0f,0.0f));
                 vertexData.Push(n1);
                 indexData.Push(index++);
 
+/*
+                unsigned int * vertexReference= vertexMemory+(face*((u*PatchSize*36)+(v*36)));
 
+
+                // copy into memory testing
+                *vertexReference=v0.x_;
+                *vertexReference++=v0.y_;
+                *vertexReference++=v0.z_;
+
+                *vertexReference++=n1.x_;
+                *vertexReference++=n1.y_;
+                *vertexReference++=n1.z_;
+
+                *vertexReference++=v1.x_;
+                *vertexReference++=v1.y_;
+                *vertexReference++=v1.z_;
+
+
+                *vertexReference++=n1.x_;
+                *vertexReference++=n1.y_;
+                *vertexReference++=n1.z_;
+
+                *vertexReference++=v3.x_;
+                *vertexReference++=v3.y_;
+                *vertexReference++=v3.z_;
+
+
+                *vertexReference++=n1.x_;
+                *vertexReference++=n1.y_;
+                *vertexReference++=n1.z_;
+
+                *vertexReference++=v0.x_;
+                *vertexReference++=v0.y_;
+                *vertexReference++=v0.z_;
+
+                *vertexReference++=n1.x_;
+                *vertexReference++=n1.y_;
+                *vertexReference++=n1.z_;
+
+                *vertexReference++=v3.x_;
+                *vertexReference++=v3.y_;
+                *vertexReference++=v3.z_;
+
+
+                *vertexMemory++=n1.x_;
+                *vertexMemory++=n1.y_;
+                *vertexMemory++=n1.z_;
+
+                *vertexMemory++=v2.x_;
+                *vertexMemory++=v2.y_;
+                *vertexMemory++=v2.z_;
+
+
+                *vertexMemory++=n1.x_;
+                *vertexMemory++=n1.y_;
+                *vertexMemory++=n1.z_;*/
             }
         }
     }
@@ -260,10 +310,12 @@ void DynamicGeometry::CreateScene()
     PODVector<VertexElement> elements;
     elements.Push(VertexElement(TYPE_VECTOR3, SEM_POSITION));
     elements.Push(VertexElement(TYPE_VECTOR3, SEM_NORMAL));
+    //elements.Push(VertexElement(TYPE_VECTOR3, SEM_TEXCOORD));
 
 
     vb->SetSize(numVertices, elements);
     vb->SetData(&vertexData[0]);
+    //vb->SetData(&vertexMemory[0]);
 
     ib->SetShadowed(true);
     ib->SetSize(numVertices, false);
@@ -295,6 +347,7 @@ void DynamicGeometry::CreateScene()
     node->SetPosition(Vector3(0.0f, 3.0f, 0.0f));
     StaticModel* object = node->CreateComponent<StaticModel>();
     object->SetModel(fromScratchModel);
+
 
     // Create the camera
     cameraNode_ = new Node(context_);
@@ -426,4 +479,43 @@ void DynamicGeometry::HandleUpdate(StringHash eventType, VariantMap& eventData)
     // Animate objects' vertex data if enabled
     //if (animate_)
     //  AnimateObjects(timeStep);
+}
+
+
+Vector3 DynamicGeometry::SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height)
+{
+
+// Create a return veriable.
+    Vector3 loReturnData = surfacePos;
+
+// Get a unit vector ( this will 'point' in the correct direction, from (0,0,0) to
+// the position of the vertex on the sphere ).
+    loReturnData.Normalize();
+
+// Add the planet radius and the height of the vertex, and return the vector.
+    return loReturnData *(radius + height);
+}
+
+
+Vector2  DynamicGeometry::UVToCoordinate(QuadFace face, unsigned int u, unsigned int v, unsigned int PatchSize)
+{
+
+    Vector2 uv;
+
+    uv.x_ = (float) 1/PatchSize;
+    uv.y_ = (float) 1/PatchSize;;
+
+    float dx = 1/(CubeMapMapping[face].z_-CubeMapMapping[face].x_);
+    float dy = 1/(CubeMapMapping[face].w_-CubeMapMapping[face].y_);
+
+    Vector2 outputx = Vector2(0,0);
+
+    outputx.x_ =  (u*uv.x_)/dx+CubeMapMapping[face].x_;
+    outputx.y_ =  (v*uv.y_)/dy+CubeMapMapping[face].y_;
+
+
+    // URHO3D_LOGINFO("face "+String((unsigned int)face));
+    //  URHO3D_LOGINFO(String(outputx.x_)+" " + String(outputx.y_));
+
+
 }

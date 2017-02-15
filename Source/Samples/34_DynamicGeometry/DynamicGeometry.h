@@ -56,15 +56,23 @@ const static Vector3  TerrainFaceCoordinate[] =
 
 const static Vector3  TerrainFaceNormalCoordinate[] =
 {
-    {-1,0,0},
-    {0,-1,0},
+    {1,0,0},
     {1,0,0},
     {0,1,0},
+    {0,1,0},
     {0,0,1},
-    {0,0,-1}
+    {0,0,1}
 };
 
-
+const static Vector4 CubeMapMapping[] =
+{
+    {0.0,.33,0.0,0.659},
+    {0.50,0.33,0.749,0.659},
+    {0.25,0.66,0.50,1.0},
+    {0.25,0,0.50,0.33},
+    {0.25,0.33,0.499,.659},
+    {0.75,0.33,1,.659}
+};
 
 /// Dynamic geometry example.
 /// This sample demonstrates:
@@ -125,4 +133,7 @@ private:
     bool animate_;
     /// Animation's elapsed time.
     float time_;
+
+    Vector3 SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height);
+    Vector2 UVToCoordinate(QuadFace face, unsigned int u, unsigned int v, unsigned int PatchSize);
 };
