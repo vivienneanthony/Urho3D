@@ -152,11 +152,11 @@ void DynamicGeometry::CreateScene()
         switch(face)
         {
         case Pos_X:
-            direction_x = CubeSize*Vector3(0,1,0);
+            direction_x = CubeSize*Vector3(0,-1,0);
             direction_y = CubeSize*Vector3(0,0,1);
             break;
         case Neg_X:
-            direction_x = CubeSize*Vector3(0,-1,0);
+            direction_x = CubeSize*Vector3(0,1,0);
             direction_y = CubeSize*Vector3(0,0,1);
             break;
         case Pos_Y:
@@ -230,14 +230,8 @@ void DynamicGeometry::CreateScene()
                 //vertexData.Push(n1);
                 indexData.Push(index++);
 
-                //vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
-                //vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
-                //vertexData.Push(n1);
                 indexData.Push(index++);
 
-                //vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
-                //vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
-                //vertexData.Push(n1);
                 indexData.Push(index++);
 
                 // hmm
@@ -250,6 +244,11 @@ void DynamicGeometry::CreateScene()
 
                 // blank vector for now
                 Vector2 coordinate = Vector2(0.0f,0.0f);
+
+                Vector2 coordinate0 = UVToCoordinate((QuadFace)face, u,  v, PatchSize);
+                Vector2 coordinate1 = UVToCoordinate((QuadFace)face, u+1,  v, PatchSize);
+                Vector2 coordinate2 = UVToCoordinate((QuadFace)face, u, v+1, PatchSize);
+                Vector2 coordinate3 = UVToCoordinate((QuadFace)face, u+1, v+1, PatchSize);
 
                 // copy into memory testing - quad and normal
                 *vertexReference=v0.x_;
@@ -266,9 +265,10 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=n1.z_;
                 *vertexReference++;
 
-                *vertexReference=coordinate.x_;
+
+                *vertexReference=coordinate0.x_;
                 *vertexReference++;
-                *vertexReference=coordinate.y_;
+                *vertexReference=coordinate0.y_;
                 *vertexReference++;
 
                 *vertexReference=v1.x_;
@@ -285,9 +285,9 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=n1.z_;
                 *vertexReference++;
 
-                *vertexReference=coordinate.x_;
+                *vertexReference=coordinate1.x_;
                 *vertexReference++;
-                *vertexReference=coordinate.y_+1;
+                *vertexReference=coordinate1.y_;
                 *vertexReference++;
 
                 *vertexReference=v3.x_;
@@ -304,9 +304,9 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=n1.z_;
                 *vertexReference++;
 
-                *vertexReference=coordinate.x_+1;
+                *vertexReference=coordinate3.x_;
                 *vertexReference++;
-                *vertexReference=coordinate.y_+1;
+                *vertexReference=coordinate3.y_;
                 *vertexReference++;
 
                 *vertexReference=v0.x_;
@@ -323,9 +323,9 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=n1.z_;
                 *vertexReference++;
 
-                *vertexReference=coordinate.x_;
+                *vertexReference=coordinate0.x_;
                 *vertexReference++;
-                *vertexReference=coordinate.y_;
+                *vertexReference=coordinate0.y_;
                 *vertexReference++;
 
                 *vertexReference=v3.x_;
@@ -342,9 +342,9 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=n1.z_;
                 *vertexReference++;
 
-                *vertexReference=coordinate.x_+1;
+                *vertexReference=coordinate3.x_;
                 *vertexReference++;
-                *vertexReference=coordinate.y_+1;
+                *vertexReference=coordinate3.y_;
                 *vertexReference++;
 
                 *vertexReference=v2.x_;
@@ -361,9 +361,9 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=n1.z_;
                 *vertexReference++;
 
-                *vertexReference=coordinate.x_+1;
+                *vertexReference=coordinate2.x_;
                 *vertexReference++;
-                *vertexReference=coordinate.y_;
+                *vertexReference=coordinate2.y_;
             }
         }
     }
@@ -421,7 +421,6 @@ void DynamicGeometry::CreateScene()
 
     // set a material
     object->SetMaterial(0, cache->GetResource<Material>("Materials/StoneTiled.xml"));
-
 
     // Create the camera
     cameraNode_ = new Node(context_);
@@ -519,10 +518,6 @@ void DynamicGeometry::HandleUpdate(StringHash eventType, VariantMap& eventData)
 
     // Move the camera, scale movement with time step
     MoveCamera(timeStep);
-
-    // Animate objects' vertex data if enabled
-    //if (animate_)
-    //  AnimateObjects(timeStep);
 }
 
 
@@ -543,23 +538,24 @@ Vector3 DynamicGeometry::SurfaceVectorToCoordinates(Vector3 surfacePos, float ra
 Vector2  DynamicGeometry::UVToCoordinate(QuadFace face, unsigned int u, unsigned int v, unsigned int PatchSize)
 {
 
-    Vector2 uv;
+    // blank vector to calculate patch size
+    Vector2 uv = Vector2(0.0f,0.0f);
 
+    // Divide patch size
     uv.x_ = (float) 1/PatchSize;
     uv.y_ = (float) 1/PatchSize;;
 
+    // calculate distance between each face in memory
     float dx = 1/(CubeMapMapping[face].z_-CubeMapMapping[face].x_);
     float dy = 1/(CubeMapMapping[face].w_-CubeMapMapping[face].y_);
 
+    // Create a blank output
     Vector2 outputx = Vector2(0,0);
 
+    // Calculate location
     outputx.x_ =  (u*uv.x_)/dx+CubeMapMapping[face].x_;
     outputx.y_ =  (v*uv.y_)/dy+CubeMapMapping[face].y_;
 
-
-    // URHO3D_LOGINFO("face "+String((unsigned int)face));
-    //  URHO3D_LOGINFO(String(outputx.x_)+" " + String(outputx.y_));
-
-
+    return outputx;
 }
 

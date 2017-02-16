@@ -46,8 +46,8 @@ enum QuadFace
 
 const static Vector3  TerrainFaceCoordinate[] =
 {
-    {-1,0,0},
     {1,0,0},
+    {-1,0,0},
     {0,1,0},
     {0,-1,0},
     {0,0,1},
@@ -66,12 +66,12 @@ const static Vector3  TerrainFaceNormalCoordinate[] =
 
 const static Vector4 CubeMapMapping[] =
 {
-    {0.0,.33,0.0,0.659},
+    {0.0,.33,0.25,0.659},
     {0.50,0.33,0.749,0.659},
-    {0.25,0.66,0.50,1.0},
+    {0.25,0.66,0.50,.99},
     {0.25,0,0.50,0.33},
     {0.25,0.33,0.499,.659},
-    {0.75,0.33,1,.659}
+    {0.75,0.33,.99,.659}
 };
 
 /// Dynamic geometry example.
