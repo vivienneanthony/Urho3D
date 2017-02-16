@@ -211,7 +211,7 @@ void DynamicGeometry::CreateScene()
                 Vector3 v3=center+ x3+y3;
 
                 //Vector3 n1 = edge2.CrossProduct(edge1).Normalized(); - predefined cut processing
-                Vector3 n1 = TerrainFaceNormalCoordinate[face];
+                //Vector3 n1 = TerrainFaceNormalCoordinate[face];
 
                 // render each point to a sphere
                 //vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
@@ -242,6 +242,12 @@ void DynamicGeometry::CreateScene()
 
                 vertexReference =  &vertexMemory[(face*PatchChunk)+(u*PatchSize*VertexElementTotalSize)+(v*VertexElementTotalSize)];
 
+                // calculate normal
+                Vector3 edge1 = v2-v0;
+                Vector3 edge2 = v1-v0;
+
+                Vector3  n1 = edge2.CrossProduct(edge1).Normalized();
+
                 // blank vector for now
                 Vector2 coordinate = Vector2(0.0f,0.0f);
 
@@ -258,11 +264,11 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=v0.z_;
                 *vertexReference++;
 
-                *vertexReference=n1.x_;
+                *vertexReference=v0.Normalized().x_;
                 *vertexReference++;
-                *vertexReference=n1.y_;
+                *vertexReference=v0.Normalized().y_;
                 *vertexReference++;
-                *vertexReference=n1.z_;
+                *vertexReference=v0.Normalized().z_;
                 *vertexReference++;
 
 
@@ -278,11 +284,11 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=v1.z_;
                 *vertexReference++;
 
-                *vertexReference=n1.x_;
+                *vertexReference=v1.Normalized().x_;
                 *vertexReference++;
-                *vertexReference=n1.y_;
+                *vertexReference=v1.Normalized().y_;
                 *vertexReference++;
-                *vertexReference=n1.z_;
+                *vertexReference=v1.Normalized().z_;
                 *vertexReference++;
 
                 *vertexReference=coordinate1.x_;
@@ -297,11 +303,11 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=v3.z_;
                 *vertexReference++;
 
-                *vertexReference=n1.x_;
+                *vertexReference=v3.Normalized().x_;
                 *vertexReference++;
-                *vertexReference=n1.y_;
+                *vertexReference=v3.Normalized().y_;
                 *vertexReference++;
-                *vertexReference=n1.z_;
+                *vertexReference=v3.Normalized().z_;
                 *vertexReference++;
 
                 *vertexReference=coordinate3.x_;
@@ -316,11 +322,11 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=v0.z_;
                 *vertexReference++;
 
-                *vertexReference=n1.x_;
+                *vertexReference=v0.Normalized().x_;
                 *vertexReference++;
-                *vertexReference=n1.y_;
+                *vertexReference=v0.Normalized().y_;
                 *vertexReference++;
-                *vertexReference=n1.z_;
+                *vertexReference=v0.Normalized().z_;
                 *vertexReference++;
 
                 *vertexReference=coordinate0.x_;
@@ -335,11 +341,11 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=v3.z_;
                 *vertexReference++;
 
-                *vertexReference=n1.x_;
+                *vertexReference=v3.Normalized().x_;
                 *vertexReference++;
-                *vertexReference=n1.y_;
+                *vertexReference=v3.Normalized().y_;
                 *vertexReference++;
-                *vertexReference=n1.z_;
+                *vertexReference=v3.Normalized().z_;
                 *vertexReference++;
 
                 *vertexReference=coordinate3.x_;
@@ -354,11 +360,11 @@ void DynamicGeometry::CreateScene()
                 *vertexReference=v2.z_;
                 *vertexReference++;
 
-                *vertexReference=n1.x_;
+                *vertexReference=v2.Normalized().x_;
                 *vertexReference++;
-                *vertexReference=n1.y_;
+                *vertexReference=v2.Normalized().y_;
                 *vertexReference++;
-                *vertexReference=n1.z_;
+                *vertexReference=v2.Normalized().z_;
                 *vertexReference++;
 
                 *vertexReference=coordinate2.x_;
@@ -421,6 +427,8 @@ void DynamicGeometry::CreateScene()
 
     // set a material
     object->SetMaterial(0, cache->GetResource<Material>("Materials/StoneTiled.xml"));
+
+
 
     // Create the camera
     cameraNode_ = new Node(context_);
