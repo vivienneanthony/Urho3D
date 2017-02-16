@@ -99,8 +99,10 @@ void DynamicGeometry::CreateScene()
     lightNode->SetDirection(Vector3(-0.6f, -1.0f, -0.8f)); // The direction vector does not need to be normalized
     Light* light = lightNode->CreateComponent<Light>();
     light->SetLightType(LIGHT_DIRECTIONAL);
-    light->SetColor(Color(0.4f, 1.0f, 0.4f));
+    light->SetColor(Color(1.0f, 1.0f, 0.4f));
     light->SetSpecularIntensity(1.5f);
+    light->SetBrightness(1.0f);
+
 
     // Get the original model and its unmodified vertices, which are used as source data for the animation
     Model* originalModel = cache->GetResource<Model>("Models/Box.mdl");
@@ -111,15 +113,18 @@ void DynamicGeometry::CreateScene()
     }
 
 
-
     // Finally create one model (pyramid shape) and a StaticModel to display it from scratch
     // Note: there are duplicated vertices to enable face normals. We will calculate normals programmatically
     unsigned numVertices = 18;
 
+    // Element total size easier to count
+    unsigned int VertexElementTotalSize=8*6;
 
     // set chunks or patches
     int PatchSize=12;
 
+    // pre-calculate chunk size
+    unsigned PatchChunk = PatchSize*PatchSize*48;
 
     // Set Cube size
     float CubeSize=10;
@@ -129,15 +134,14 @@ void DynamicGeometry::CreateScene()
     Vector3 direction_x = Vector3::ZERO;
     Vector3 direction_y = Vector3::ZERO;
 
-
-    // Create buffer
     Vector<Vector3> vertexData;
     Vector<unsigned short> indexData;
 
     // Create a index
     unsigned short index = 0;
 
-    //unsigned int* vertexMemory =(unsigned int *)new float[6*PatchSize*PatchSize*12*3];
+    float * vertexMemory =(float *)new float[6*PatchSize*PatchSize*VertexElementTotalSize];
+    float * vertexReference= NULL;
 
     for(unsigned int face=0; face< 6; face++)
     {
@@ -210,91 +214,160 @@ void DynamicGeometry::CreateScene()
                 Vector3 n1 = TerrainFaceNormalCoordinate[face];
 
                 // render each point to a sphere
-                vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
-                vertexData.Push(n1);
+                //vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
+                v0=SurfaceVectorToCoordinates(v0,2.0f,0.0f);
+                //vertexData.Push(n1);
                 indexData.Push(index++);
 
                 // testing
-                vertexData.Push(SurfaceVectorToCoordinates(v1,2.0f,0.0f));
-                vertexData.Push(n1);
+                //vertexData.Push(SurfaceVectorToCoordinates(v1,2.0f,0.0f));
+                v1=SurfaceVectorToCoordinates(v1,2.0f,0.0f);
+                //vertexData.Push(n1);
                 indexData.Push(index++);
 
-                vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
-                vertexData.Push(n1);
+                //vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
+                v3=SurfaceVectorToCoordinates(v3,2.0f,0.0f);
+                //vertexData.Push(n1);
                 indexData.Push(index++);
 
-                vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
-                vertexData.Push(n1);
+                //vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
+                //vertexData.Push(SurfaceVectorToCoordinates(v0,2.0f,0.0f));
+                //vertexData.Push(n1);
                 indexData.Push(index++);
 
-                vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
-                vertexData.Push(n1);
+                //vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
+                //vertexData.Push(SurfaceVectorToCoordinates(v3,2.0f,0.0f));
+                //vertexData.Push(n1);
                 indexData.Push(index++);
 
                 // hmm
-                vertexData.Push(SurfaceVectorToCoordinates(v2,2.0f,0.0f));
-                vertexData.Push(n1);
+                //vertexData.Push(SurfaceVectorToCoordinates(v2,2.0f,0.0f));
+                v2=SurfaceVectorToCoordinates(v2,2.0f,0.0f);
+                //vertexData.Push(n1);
                 indexData.Push(index++);
 
-/*
-                unsigned int * vertexReference= vertexMemory+(face*((u*PatchSize*36)+(v*36)));
+                vertexReference =  &vertexMemory[(face*PatchChunk)+(u*PatchSize*VertexElementTotalSize)+(v*VertexElementTotalSize)];
 
+                // blank vector for now
+                Vector2 coordinate = Vector2(0.0f,0.0f);
 
-                // copy into memory testing
+                // copy into memory testing - quad and normal
                 *vertexReference=v0.x_;
-                *vertexReference++=v0.y_;
-                *vertexReference++=v0.z_;
+                *vertexReference++;
+                *vertexReference=v0.y_;
+                *vertexReference++;
+                *vertexReference=v0.z_;
+                *vertexReference++;
 
-                *vertexReference++=n1.x_;
-                *vertexReference++=n1.y_;
-                *vertexReference++=n1.z_;
+                *vertexReference=n1.x_;
+                *vertexReference++;
+                *vertexReference=n1.y_;
+                *vertexReference++;
+                *vertexReference=n1.z_;
+                *vertexReference++;
 
-                *vertexReference++=v1.x_;
-                *vertexReference++=v1.y_;
-                *vertexReference++=v1.z_;
+                *vertexReference=coordinate.x_;
+                *vertexReference++;
+                *vertexReference=coordinate.y_;
+                *vertexReference++;
 
+                *vertexReference=v1.x_;
+                *vertexReference++;
+                *vertexReference=v1.y_;
+                *vertexReference++;
+                *vertexReference=v1.z_;
+                *vertexReference++;
 
-                *vertexReference++=n1.x_;
-                *vertexReference++=n1.y_;
-                *vertexReference++=n1.z_;
+                *vertexReference=n1.x_;
+                *vertexReference++;
+                *vertexReference=n1.y_;
+                *vertexReference++;
+                *vertexReference=n1.z_;
+                *vertexReference++;
 
-                *vertexReference++=v3.x_;
-                *vertexReference++=v3.y_;
-                *vertexReference++=v3.z_;
+                *vertexReference=coordinate.x_;
+                *vertexReference++;
+                *vertexReference=coordinate.y_+1;
+                *vertexReference++;
 
+                *vertexReference=v3.x_;
+                *vertexReference++;
+                *vertexReference=v3.y_;
+                *vertexReference++;
+                *vertexReference=v3.z_;
+                *vertexReference++;
 
-                *vertexReference++=n1.x_;
-                *vertexReference++=n1.y_;
-                *vertexReference++=n1.z_;
+                *vertexReference=n1.x_;
+                *vertexReference++;
+                *vertexReference=n1.y_;
+                *vertexReference++;
+                *vertexReference=n1.z_;
+                *vertexReference++;
 
-                *vertexReference++=v0.x_;
-                *vertexReference++=v0.y_;
-                *vertexReference++=v0.z_;
+                *vertexReference=coordinate.x_+1;
+                *vertexReference++;
+                *vertexReference=coordinate.y_+1;
+                *vertexReference++;
 
-                *vertexReference++=n1.x_;
-                *vertexReference++=n1.y_;
-                *vertexReference++=n1.z_;
+                *vertexReference=v0.x_;
+                *vertexReference++;
+                *vertexReference=v0.y_;
+                *vertexReference++;
+                *vertexReference=v0.z_;
+                *vertexReference++;
 
-                *vertexReference++=v3.x_;
-                *vertexReference++=v3.y_;
-                *vertexReference++=v3.z_;
+                *vertexReference=n1.x_;
+                *vertexReference++;
+                *vertexReference=n1.y_;
+                *vertexReference++;
+                *vertexReference=n1.z_;
+                *vertexReference++;
 
+                *vertexReference=coordinate.x_;
+                *vertexReference++;
+                *vertexReference=coordinate.y_;
+                *vertexReference++;
 
-                *vertexMemory++=n1.x_;
-                *vertexMemory++=n1.y_;
-                *vertexMemory++=n1.z_;
+                *vertexReference=v3.x_;
+                *vertexReference++;
+                *vertexReference=v3.y_;
+                *vertexReference++;
+                *vertexReference=v3.z_;
+                *vertexReference++;
 
-                *vertexMemory++=v2.x_;
-                *vertexMemory++=v2.y_;
-                *vertexMemory++=v2.z_;
+                *vertexReference=n1.x_;
+                *vertexReference++;
+                *vertexReference=n1.y_;
+                *vertexReference++;
+                *vertexReference=n1.z_;
+                *vertexReference++;
 
+                *vertexReference=coordinate.x_+1;
+                *vertexReference++;
+                *vertexReference=coordinate.y_+1;
+                *vertexReference++;
 
-                *vertexMemory++=n1.x_;
-                *vertexMemory++=n1.y_;
-                *vertexMemory++=n1.z_;*/
+                *vertexReference=v2.x_;
+                *vertexReference++;
+                *vertexReference=v2.y_;
+                *vertexReference++;
+                *vertexReference=v2.z_;
+                *vertexReference++;
+
+                *vertexReference=n1.x_;
+                *vertexReference++;
+                *vertexReference=n1.y_;
+                *vertexReference++;
+                *vertexReference=n1.z_;
+                *vertexReference++;
+
+                *vertexReference=coordinate.x_+1;
+                *vertexReference++;
+                *vertexReference=coordinate.y_;
             }
         }
     }
+
     numVertices = indexData.Size();
 
     SharedPtr<Model> fromScratchModel(new Model(context_));
@@ -310,12 +383,10 @@ void DynamicGeometry::CreateScene()
     PODVector<VertexElement> elements;
     elements.Push(VertexElement(TYPE_VECTOR3, SEM_POSITION));
     elements.Push(VertexElement(TYPE_VECTOR3, SEM_NORMAL));
-    //elements.Push(VertexElement(TYPE_VECTOR3, SEM_TEXCOORD));
-
+    elements.Push(VertexElement(TYPE_VECTOR2, SEM_TEXCOORD));
 
     vb->SetSize(numVertices, elements);
-    vb->SetData(&vertexData[0]);
-    //vb->SetData(&vertexMemory[0]);
+    vb->SetData(vertexMemory);
 
     ib->SetShadowed(true);
     ib->SetSize(numVertices, false);
@@ -347,6 +418,9 @@ void DynamicGeometry::CreateScene()
     node->SetPosition(Vector3(0.0f, 3.0f, 0.0f));
     StaticModel* object = node->CreateComponent<StaticModel>();
     object->SetModel(fromScratchModel);
+
+    // set a material
+    object->SetMaterial(0, cache->GetResource<Material>("Materials/StoneTiled.xml"));
 
 
     // Create the camera
@@ -428,37 +502,7 @@ void DynamicGeometry::MoveCamera(float timeStep)
 void DynamicGeometry::AnimateObjects(float timeStep)
 {
     URHO3D_PROFILE(AnimateObjects);
-    /*
-        time_ += timeStep * 100.0f;
 
-        // Repeat for each of the cloned vertex buffers
-        for (unsigned i = 0; i < animatingBuffers_.Size(); ++i)
-        {
-            float startPhase = time_ + i * 30.0f;
-            VertexBuffer* buffer = animatingBuffers_[i];
-
-            // Lock the vertex buffer for update and rewrite positions with sine wave modulated ones
-            // Cannot use discard lock as there is other data (normals, UVs) that we are not overwriting
-            unsigned char* vertexData = (unsigned char*)buffer->Lock(0, buffer->GetVertexCount());
-            if (vertexData)
-            {
-                unsigned vertexSize = buffer->GetVertexSize();
-                unsigned numVertices = buffer->GetVertexCount();
-                for (unsigned j = 0; j < numVertices; ++j)
-                {
-                    // If there are duplicate vertices, animate them in phase of the original
-                    float phase = startPhase + vertexDuplicates_[j] * 10.0f;
-                    Vector3& src = originalVertices_[j];
-                    Vector3& dest = *reinterpret_cast<Vector3*>(vertexData + j * vertexSize);
-                    dest.x_ = src.x_ * (1.0f + 0.1f * Sin(phase));
-                    dest.y_ = src.y_ * (1.0f + 0.1f * Sin(phase + 60.0f));
-                    dest.z_ = src.z_ * (1.0f + 0.1f * Sin(phase + 120.0f));
-                }
-
-                buffer->Unlock();
-            }
-        }
-        */
 }
 
 void DynamicGeometry::HandleUpdate(StringHash eventType, VariantMap& eventData)
@@ -484,15 +528,14 @@ void DynamicGeometry::HandleUpdate(StringHash eventType, VariantMap& eventData)
 
 Vector3 DynamicGeometry::SurfaceVectorToCoordinates(Vector3 surfacePos, float radius, float height)
 {
-
-// Create a return veriable.
+    // Create a return veriable.
     Vector3 loReturnData = surfacePos;
 
-// Get a unit vector ( this will 'point' in the correct direction, from (0,0,0) to
-// the position of the vertex on the sphere ).
+    // Get a unit vector ( this will 'point' in the correct direction, from (0,0,0) to
+    // the position of the vertex on the sphere ).
     loReturnData.Normalize();
 
-// Add the planet radius and the height of the vertex, and return the vector.
+    // Add the planet radius and the height of the vertex, and return the vector.
     return loReturnData *(radius + height);
 }
 
@@ -519,3 +562,4 @@ Vector2  DynamicGeometry::UVToCoordinate(QuadFace face, unsigned int u, unsigned
 
 
 }
+
