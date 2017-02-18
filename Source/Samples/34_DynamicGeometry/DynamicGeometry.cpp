@@ -156,24 +156,24 @@ void DynamicGeometry::CreateScene()
             direction_y = CubeSize*Vector3(0,0,1);
             break;
         case Neg_X:
-            direction_x = CubeSize*Vector3(0,1,0);
-            direction_y = CubeSize*Vector3(0,0,1);
-            break;
-        case Pos_Y:
-            direction_x = CubeSize*Vector3(1,0,0);
-            direction_y = CubeSize*Vector3(0,0,1);
-            break;
-        case Neg_Y:
-            direction_x = CubeSize*Vector3(1,0,0);
+            direction_x = CubeSize*Vector3(0,-1,0);
             direction_y = CubeSize*Vector3(0,0,-1);
             break;
+        case Pos_Y:
+            direction_x = CubeSize*Vector3(0,0,1);
+            direction_y = CubeSize*Vector3(1,0,0);
+            break;
+        case Neg_Y:
+            direction_x = CubeSize*Vector3(0,0,1);
+            direction_y = CubeSize*Vector3(-1,0,0);
+            break;
         case Pos_Z:
-            direction_x = CubeSize*Vector3(1,0,0);
-            direction_y = CubeSize*Vector3(0,-1,0);
+            direction_x = CubeSize*Vector3(0,-1,0);
+            direction_y = CubeSize*Vector3(-1,0,0);
             break;
         case Neg_Z:
-            direction_x = CubeSize*Vector3(1,0,0);
-            direction_y = CubeSize*Vector3(0,1,0);
+            direction_x = CubeSize*Vector3(0,-1,0);
+            direction_y = CubeSize*Vector3(1,0,0);
             break;
         }
 
@@ -426,9 +426,7 @@ void DynamicGeometry::CreateScene()
     object->SetModel(fromScratchModel);
 
     // set a material
-    object->SetMaterial(0, cache->GetResource<Material>("Materials/StoneTiled.xml"));
-
-
+    object->SetMaterial(0, cache->GetResource<Material>("Materials/Stone.xml"));
 
     // Create the camera
     cameraNode_ = new Node(context_);
